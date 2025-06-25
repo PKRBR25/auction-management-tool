@@ -1,0 +1,123 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id              Int           @id @default(autoincrement())
+  email           String        @unique
+  hashedPassword  String
+  fullName        String?
+  createdAt       DateTime      @default(now()) @map("created_at")
+  updatedAt       DateTime      @updatedAt @map("updated_at")
+  isActive        Boolean       @default(true) @map("is_active")
+  activeSince     DateTime      @default(now()) @map("active_since")
+  verificationToken Int?        @unique @map("verification_token")
+  isVerified      Boolean       @default(false) @map("is_verified")
+  verifiedSince   DateTime?     @map("verified_since")
+  passwordResets  PasswordReset[]
+  auctionRequests AuctionRequest[]
+
+  @@map("users")
+}
+
+model PasswordReset {
+  id                Int      @id @default(autoincrement()) @map("pr_id")
+  user              User     @relation(fields: [userId], references: [id])
+  userId            Int      @map("users_id")
+  token             Int      @unique @map("pr_token")
+  tokenExpiresAt    DateTime @map("pr_token_expires_at")
+  tokenLockedUntil  DateTime? @map("pr_token_locked_until")
+  tokenValidUntil   DateTime? @map("pr_token_valid_until")
+
+  @@map("password_reset")
+}
+
+model AuctionRequest {
+  id          Int      @id @default(autoincrement()) @map("auction_id")
+  user        User     @relation(fields: [userId], references: [id])
+  userId      Int      @map("users_id")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+  isActive    Boolean  @default(true) @map("is_active")
+  activeSince DateTime @default(now()) @map("active_since")
+  auctionData AuctionData?
+
+  @@map("auction_request")
+}
+
+model AuctionData {
+  id                Int      @id @default(autoincrement()) @map("auction_id")
+  auctionRequest    AuctionRequest @relation(fields: [auctionRequestId], references: [id])
+  auctionRequestId  Int      @unique
+  description       String   @map("auction_description")
+  freight           String
+  from              String
+  to                String
+  vehicle           Vehicle
+  type              VehicleType @map("type")
+  tracking          TrackingType
+  insurance         InsuranceType
+
+  @@map("auction_data")
+}
+
+model Participant {
+  id              Int       @id @default(autoincrement()) @map("participant_id")
+  name            String    @map("participant_name")
+  email           String    @unique
+  contactName     String    @map("contact_name")
+  phone           Int
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+  isActive        Boolean   @default(true) @map("is_active")
+  activeSince     DateTime  @default(now()) @map("active_since")
+  participantRequests ParticipantRequest[]
+
+  @@map("participants")
+}
+
+model ParticipantRequest {
+  id              Int         @id @default(autoincrement()) @map("participant_id")
+  participant     Participant @relation(fields: [participantId], references: [id])
+  participantId   Int
+  createdAt       DateTime    @default(now()) @map("created_at")
+  updatedAt       DateTime    @updatedAt @map("updated_at")
+  isActive        Boolean     @default(true) @map("is_active")
+  activeSince     DateTime    @default(now()) @map("active_since")
+
+  @@map("participants_request")
+}
+
+enum Vehicle {
+  URBAN_CARGO
+  RURAL_CARGO
+  TRUCK
+  HEAVY_TRUCK
+}
+
+enum VehicleType {
+  FLEET
+  THIRD_PART
+}
+
+enum TrackingType {
+  REAL_TIME
+  NO
+}
+
+enum InsuranceType {
+  YES
+  NO
+}
