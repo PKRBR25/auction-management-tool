@@ -20,13 +20,27 @@
 - [x] Set up environment variables
 
 ## Phase 2: Database & Authentication (2-3 days)
-- [ ] Create database tables
-  - [ ] users table
-  - [ ] password_reset table
-- [ ] Implement NextAuth.js configuration
-- [ ] Create email service integration
-- [ ] Set up email templates as configuration files
-- [ ] Test database connections and email sending
+- [x] Create database tables
+  - [x] users table
+  - [x] password_reset table
+  - [x] auction_data table
+  - [x] auction_request table
+  - [x] participants table
+  - [x] participants_request table
+  - [x] _prisma_migrations table
+- [x] Implement NextAuth.js configuration
+  - [x] Set up auth options and providers
+  - [x] Configure authentication routes
+  - [x] Add session provider to layout
+  - [x] Create email service integration
+  - [x] Set up Google SMTP configuration
+  - [x] Create email sending service
+  - [x] Add verification code generation
+  - [x] Add email configuration verification
+- [x] Set up email templates as configuration files
+  - [x] Email Validation Template - V0
+  - [x] Password Reset Template - V0
+- [x] Test database connections and email sending
 
 ## Phase 3: Core Authentication Flow (3-4 days)
 - [ ] Implement authentication endpoints
