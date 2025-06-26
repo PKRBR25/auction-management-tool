@@ -22,7 +22,8 @@ model User {
   updatedAt       DateTime      @updatedAt @map("updated_at")
   isActive        Boolean       @default(true) @map("is_active")
   activeSince     DateTime      @default(now()) @map("active_since")
-  verificationToken Int?        @unique @map("verification_token")
+  verificationToken String?     @unique @map("verification_token")
+  verificationTokenExpires DateTime? @map("verification_token_expires")
   isVerified      Boolean       @default(false) @map("is_verified")
   verifiedSince   DateTime?     @map("verified_since")
   passwordResets  PasswordReset[]

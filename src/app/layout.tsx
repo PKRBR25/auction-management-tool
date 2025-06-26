@@ -1,35 +1,24 @@
-import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
-import { Providers } from "./providers";
-import "./globals.css";
+import { Inter } from 'next/font/google'
+import './globals.css'
+import { Providers } from './providers'
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
+const inter = Inter({ subsets: ['latin'] })
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
-
-export const metadata: Metadata = {
-  title: "Auction Management Tool",
-  description: "A comprehensive tool for managing auctions and participants",
-};
+export const metadata = {
+  title: 'Auction Management Tool',
+  description: 'A comprehensive tool for managing auctions',
+}
 
 export default function RootLayout({
   children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+}: {
+  children: React.ReactNode
+}) {
   return (
     <html lang="en">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
+      <body className={inter.className}>
         <Providers>{children}</Providers>
       </body>
     </html>
-  );
+  )
 }
