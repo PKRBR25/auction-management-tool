@@ -65,19 +65,20 @@
   - [x] CAPTCHA
   - [x] Input validation
 
-## Phase 4: Participant Management (2-3 days)
-- [ ] Create participant tables
-  - [ ] participants
-  - [ ] participants_request
-- [ ] Implement participant operations
-  - [ ] Create
-  - [ ] Read
-  - [ ] Update
-  - [ ] Delete
-- [ ] Create participant pages
-  - [ ] Listing page
-  - [ ] Management interface
-- [ ] Test participant management flow
+## Phase 4: Participant Management (2-3 days) ✅
+- [x] Create participant tables
+  - [x] participants
+  - [x] participants_request
+- [x] Implement participant operations
+  - [x] Create
+  - [x] Read
+  - [x] Update
+  - [x] Delete
+- [x] Create participant pages
+  - [x] Listing page (/participants)
+  - [x] Creation page (/participants/new)
+  - [x] Edit page (/participants/[id])
+- [x] Test participant management flow
 
 ## Phase 5: Auction Core (3-4 days)
 - [ ] Create auction tables
