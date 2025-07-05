@@ -1,14 +1,14 @@
 interface EmailTemplateParams {
-  user_full_name: string;
-  verification_code: string;
-  company_name: string;
-  company_address_line1: string;
-  company_address_line2: string;
-  current_year: string;
-  privacy_policy_url: string;
-  terms_url: string;
-  unsubscribe_url: string;
-  preferences_url: string;
+  userFullName: string;
+  verificationCode: string;
+  companyName: string;
+  companyAddressLine1?: string;
+  companyAddressLine2?: string;
+  currentYear: string;
+  privacyPolicyUrl: string;
+  termsUrl: string;
+  unsubscribeUrl: string;
+  preferencesUrl: string;
 }
 
 export function getPasswordResetEmailTemplate(params: EmailTemplateParams): string {
@@ -84,11 +84,11 @@ export function getPasswordResetEmailTemplate(params: EmailTemplateParams): stri
     <div class="content">
         <h2>Reset Your Password</h2>
         
-        <p>Hello <strong>${params.user_full_name}</strong>,</p>
+        <p>Hello <strong>${params.userFullName}</strong>,</p>
         
         <p>We received a request to reset the password for your account. Use the following verification code to proceed:</p>
         
-        <div class="code">${params.verification_code}</div>
+        <div class="code">${params.verificationCode}</div>
         
         <p class="expiry-note">This code will expire in 15 minutes.</p>
         
@@ -98,22 +98,22 @@ export function getPasswordResetEmailTemplate(params: EmailTemplateParams): stri
         
         <p>Need help? Contact our support team at <a href="mailto:support@yourdomain.com">support@yourdomain.com</a></p>
         
-        <p>Best regards,<br>The ${params.company_name} Team</p>
+        <p>Best regards,<br>The ${params.companyName} Team</p>
     </div>
     
     <div class="footer">
-        <p>© ${params.current_year} ${params.company_name}. All rights reserved.</p>
+        <p>© ${params.currentYear} ${params.companyName}. All rights reserved.</p>
         <p>
-            <a href="${params.privacy_policy_url}" style="color: #4F46E5; text-decoration: none;">Privacy Policy</a> | 
-            <a href="${params.terms_url}" style="color: #4F46E5; text-decoration: none;">Terms of Service</a>
+            <a href="${params.privacyPolicyUrl}" style="color: #4F46E5; text-decoration: none;">Privacy Policy</a> | 
+            <a href="${params.termsUrl}" style="color: #4F46E5; text-decoration: none;">Terms of Service</a>
         </p>
         <p>
-            ${params.company_address_line1}<br>
-            ${params.company_address_line2}
+            ${params.companyAddressLine1}<br>
+            ${params.companyAddressLine2}
         </p>
         <p>
-            <a href="${params.unsubscribe_url}" style="color: #666666; text-decoration: underline;">Unsubscribe</a> | 
-            <a href="${params.preferences_url}" style="color: #666666; text-decoration: underline;">Email Preferences</a>
+            <a href="${params.unsubscribeUrl}" style="color: #666666; text-decoration: underline;">Unsubscribe</a> | 
+            <a href="${params.preferencesUrl}" style="color: #666666; text-decoration: underline;">Email Preferences</a>
         </p>
     </div>
 </body>

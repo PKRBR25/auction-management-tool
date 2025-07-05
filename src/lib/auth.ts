@@ -1,7 +1,7 @@
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
-import { prisma } from "./prisma";
+import prisma from "./prisma";
 import { compare } from "bcryptjs";
 
 export const authOptions: NextAuthOptions = {
@@ -11,9 +11,9 @@ export const authOptions: NextAuthOptions = {
     maxAge: 30 * 24 * 60 * 60, // 30 days
   },
   pages: {
-    signIn: "/auth/login",
-    error: "/auth/error",
-    verifyRequest: "/auth/verify",
+    signIn: "/login",
+    error: "/error",
+    verifyRequest: "/verify-email",
   },
   providers: [
     CredentialsProvider({
@@ -37,10 +37,17 @@ export const authOptions: NextAuthOptions = {
           throw new Error("Invalid credentials");
         }
 
+        // Decode password before comparison
+        const decodedPassword = decodeURIComponent(credentials.password);
+        
         const isPasswordValid = await compare(
-          credentials.password,
+          decodedPassword,
           user.hashedPassword
         );
+        
+        if (!isPasswordValid) {
+          console.error('Password validation failed for user:', credentials.email);
+        }
 
         if (!isPasswordValid) {
           throw new Error("Invalid credentials");
@@ -70,6 +77,13 @@ export const authOptions: NextAuthOptions = {
         session.user.id = token.id as string;
       }
       return session;
+    },
+    async redirect({ url, baseUrl }) {
+      // Allows relative callback URLs
+      if (url.startsWith("/")) return `${baseUrl}${url}`;
+      // Allows callback URLs on the same origin
+      else if (new URL(url).origin === baseUrl) return url;
+      return baseUrl + "/dashboard";
     },
   },
 };
