@@ -1,11 +1,13 @@
 import { NextResponse } from 'next/server';
 import { hash } from 'bcryptjs';
-import { prisma } from '@/lib/prisma';
+import prisma from '@/lib/prisma';
 
 export async function POST(req: Request) {
   console.log('Starting password reset process...');
   try {
-    const { email, verificationCode, newPassword } = await req.json();
+    const { email, verificationCode, newPassword: encodedPassword } = await req.json();
+    // Decode password before hashing
+    const newPassword = decodeURIComponent(encodedPassword);
     console.log('Processing reset for email:', email);
 
     // Convert verification code to number since our schema uses Int
@@ -55,7 +57,17 @@ export async function POST(req: Request) {
 
     console.log('Valid reset token found, updating password...');
     // Hash new password
-    const hashedPassword = await hash(newPassword, 12);
+    let hashedPassword: string;
+    try {
+      hashedPassword = await hash(newPassword, 12);
+      console.log('New password hashed successfully');
+    } catch (error) {
+      console.error('Error hashing new password:', error);
+      return NextResponse.json(
+        { message: 'Error processing new password' },
+        { status: 500 }
+      );
+    }
 
     // Update password and invalidate the reset token
     await prisma.$transaction([

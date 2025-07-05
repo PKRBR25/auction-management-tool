@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { hash } from 'bcryptjs';
-import { prisma } from '@/lib/prisma';
+import prisma from '@/lib/prisma';
 import { generateVerificationCode } from '@/lib/email/service';
 import { getVerificationEmailTemplate } from '@/lib/email/templates/verification';
 import { sendEmail } from '@/lib/email/service';
@@ -26,7 +26,7 @@ export async function POST(req: Request) {
     }
 
     console.log('Hashing password...');
-    // Hash password
+    // Hash password with consistent salt rounds
     const hashedPassword = await hash(password, 12);
 
     console.log('Generating verification code...');
@@ -86,11 +86,9 @@ export async function POST(req: Request) {
     
     // Check for missing environment variables
     const requiredEnvVars = [
-      'SMTP_USER',
-      'SMTP_APP_PASSWORD',
+      'GMAIL_EMAIL',
+      'GMAIL_APP_PASSWORD',
       'COMPANY_NAME',
-      'COMPANY_ADDRESS_LINE1',
-      'COMPANY_ADDRESS_LINE2',
       'PRIVACY_POLICY_URL',
       'TERMS_URL',
       'UNSUBSCRIBE_URL',

@@ -47,13 +47,27 @@ export default function VerifyEmailPage() {
       const result = await response.json();
 
       if (!response.ok) {
-        throw new Error(result.message || 'Verification failed');
+        if (result.message) {
+          if (result.message.includes('already verified')) {
+            // If email is already verified, redirect to login
+            router.push('/login');
+            return;
+          }
+          throw new Error(result.message);
+        }
+        throw new Error('Verification failed. Please try again.');
       }
 
-      // Redirect to login page on success
-      router.push('/login');
+      // Show success message and redirect to login page
+      setError(null);
+      router.push('/login?verified=true');
     } catch (error) {
-      setError(error instanceof Error ? error.message : 'Verification failed');
+      console.error('Verification error:', error);
+      setError(
+        error instanceof Error 
+          ? error.message 
+          : 'An unexpected error occurred. Please try again or contact support.'
+      );
     } finally {
       setIsLoading(false);
     }
@@ -69,7 +83,7 @@ export default function VerifyEmailPage() {
         )}
 
         <div className="space-y-4">
-          <FormInput
+          <FormInput<VerifyEmailFormData>
             id="email"
             label="Email address"
             type="email"
@@ -79,7 +93,7 @@ export default function VerifyEmailPage() {
             pattern={emailPattern}
           />
 
-          <FormInput
+          <FormInput<VerifyEmailFormData>
             id="verificationCode"
             label="Verification Code"
             required

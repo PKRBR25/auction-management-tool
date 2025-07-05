@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
-import { prisma } from '@/lib/prisma';
+import prisma from '@/lib/prisma';
 import { z } from 'zod';
 
 // Validation schema for participant update data
@@ -46,16 +46,21 @@ export async function GET(
       return NextResponse.json({ error: 'Participant not found' }, { status: 404 });
     }
 
-    // Convert BigInt to string for JSON serialization
+    // Convert data to match frontend structure
     const serializedParticipant = {
-      ...participant,
+      id: participant.id,
+      name: participant.name,
+      email: participant.email,
+      contactName: participant.contactName,
       phone: participant.phone.toString(),
-      participantRequests: participant.participantRequests.map(request => ({
-        ...request,
-        participantId: request.participantId.toString()
-      }))
+      // Use most recent request's active status if available, otherwise use participant's status
+      isActive: participant.participantRequests[0]?.isActive ?? participant.isActive
     };
-    return NextResponse.json(serializedParticipant);
+    
+    // Add cache control headers
+    const response = NextResponse.json(serializedParticipant);
+    response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate');
+    return response;
   } catch (error) {
     console.error('Error fetching participant:', error);
     return NextResponse.json(
@@ -85,7 +90,7 @@ export async function PUT(
     const validatedData = participantUpdateSchema.parse(body);
 
     // Start a transaction to update both participant and create request
-    const updatedParticipant = await prisma.$transaction(async (prisma) => {
+    const updatedParticipant = await prisma.$transaction(async (tx) => {
       // Update participant
       const participant = await prisma.participant.update({
         where: { id },

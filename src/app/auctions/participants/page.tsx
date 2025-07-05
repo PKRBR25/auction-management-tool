@@ -68,23 +68,44 @@ export default function AuctionParticipantsPage() {
         return;
       }
 
-      // First verify if the auction exists and is accessible
-      console.log('Verifying auction exists:', auctionId);
-      const verifyAuctionResponse = await fetch(`/api/auctions/${auctionId}`);
-      const verifyAuctionData = await verifyAuctionResponse.json();
-      
-      if (!verifyAuctionResponse.ok) {
-        console.error('Auction verification failed:', {
-          status: verifyAuctionResponse.status,
-          statusText: verifyAuctionResponse.statusText,
-          error: verifyAuctionData.error
-        });
-        throw new Error(verifyAuctionData.error || 'Auction not found or inaccessible');
+      // First check if we have the auction data in session storage
+      const storedAuctionData = sessionStorage.getItem('currentAuctionData');
+      if (!storedAuctionData) {
+        console.error('No auction data found in session storage');
+        setError('Auction data not found. Please start over.');
+        router.push('/auctions/new');
+        return;
       }
 
-      if (!verifyAuctionData.id) {
-        console.error('Invalid auction data received:', verifyAuctionData);
-        throw new Error('Invalid auction data');
+      // Verify if the auction exists and is accessible
+      try {
+        console.log('Verifying auction exists:', auctionId);
+        const verifyAuctionResponse = await fetch(`/api/auctions/${auctionId}`);
+        const verifyAuctionData = await verifyAuctionResponse.json();
+        
+        if (!verifyAuctionResponse.ok) {
+          console.error('Auction verification failed:', {
+            status: verifyAuctionResponse.status,
+            statusText: verifyAuctionResponse.statusText,
+            error: verifyAuctionData.error || 'Unknown error',
+            auctionId
+          });
+          throw new Error(verifyAuctionData.error || 'Auction not found or inaccessible');
+        }
+
+        if (!verifyAuctionData || typeof verifyAuctionData.id !== 'number') {
+          console.error('Invalid auction data:', verifyAuctionData);
+          throw new Error('Invalid auction data received');
+        }
+
+        console.log('Auction verified:', {
+          id: verifyAuctionData.id,
+          description: verifyAuctionData.description,
+          isActive: verifyAuctionData.isActive
+        });
+      } catch (error) {
+        console.error('Error verifying auction:', error);
+        throw error;
       }
 
       // Make API request to assign participants
@@ -92,7 +113,8 @@ export default function AuctionParticipantsPage() {
       console.log('Assigning participants to auction:', {
         auctionId,
         participantIds,
-        participantCount: participantIds.length
+        participantCount: participantIds.length,
+        selectedParticipants: participants.filter(p => selectedParticipants.includes(p.id))
       });
 
       const response = await fetch(`/api/auctions/${auctionId}/participants`, {

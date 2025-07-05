@@ -1,11 +1,16 @@
+'use client';
+
 import { ReactNode } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { signOut } from 'next-auth/react';
 import {
   UserIcon,
   ChartBarIcon,
   ClipboardDocumentListIcon,
   UsersIcon,
   PlusCircleIcon,
+  ArrowRightOnRectangleIcon,
 } from '@heroicons/react/24/outline';
 
 interface SidebarLayoutProps {
@@ -21,6 +26,12 @@ const navigation = [
 ];
 
 export default function SidebarLayout({ children }: SidebarLayoutProps) {
+  const router = useRouter();
+
+  const handleLogout = async () => {
+    await signOut({ redirect: false });
+    router.push('/login');
+  };
   return (
     <div className="min-h-screen bg-gray-100">
       <div className="flex">
@@ -49,6 +60,18 @@ export default function SidebarLayout({ children }: SidebarLayoutProps) {
                     {item.name}
                   </Link>
                 ))}
+
+                {/* Logout Button */}
+                <button
+                  onClick={handleLogout}
+                  className="w-full group flex items-center px-2 py-2 text-sm font-medium rounded-md text-red-600 hover:bg-red-50 hover:text-red-900"
+                >
+                  <ArrowRightOnRectangleIcon
+                    className="mr-3 flex-shrink-0 h-6 w-6 text-red-400 group-hover:text-red-500"
+                    aria-hidden="true"
+                  />
+                  Logout
+                </button>
               </nav>
             </div>
           </div>

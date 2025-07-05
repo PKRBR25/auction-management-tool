@@ -1,13 +1,14 @@
 import React from 'react';
-import { UseFormRegister, FieldValues, FieldErrors } from 'react-hook-form';
+import { UseFormRegister, FieldValues, FieldErrors, Path } from 'react-hook-form';
 
-interface FormInputProps {
-  id: string;
+interface FormInputProps<T extends FieldValues = FieldValues> {
+  id: Path<T>;
+
   label: string;
   type?: string;
   required?: boolean;
-  register: UseFormRegister<FieldValues>;
-  errors: FieldErrors;
+  register: UseFormRegister<T>;
+  errors: FieldErrors<T>;
   pattern?: {
     value: RegExp;
     message: string;
@@ -16,7 +17,7 @@ interface FormInputProps {
   placeholder?: string;
 }
 
-export function FormInput({
+export function FormInput<T extends FieldValues>({
   id,
   label,
   type = 'text',
@@ -26,7 +27,7 @@ export function FormInput({
   pattern,
   validate,
   placeholder,
-}: FormInputProps) {
+}: FormInputProps<T>) {
   return (
     <div>
       <label htmlFor={id} className="block text-sm font-medium text-gray-700">

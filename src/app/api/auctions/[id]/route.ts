@@ -5,6 +5,75 @@ import prisma from '@/lib/prisma';
 import { z } from 'zod';
 import { Prisma } from '@prisma/client';
 
+const AuctionInclude = {
+  auctionData: true,
+  user: {
+    select: {
+      email: true,
+      fullName: true
+    }
+  },
+  participants: {
+    include: {
+      participant: {
+        include: {
+          participant: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+              contactName: true,
+              phone: true,
+              isActive: true
+            }
+          }
+        }
+      }
+    }
+  }
+} as const;
+
+type AuctionParticipantData = {
+  participant: {
+    participant: {
+      id: number;
+      name: string;
+      email: string;
+      contactName: string;
+      phone: bigint;
+      isActive: boolean;
+    };
+  };
+};
+
+interface AuctionData {
+  description: string;
+  freight: string;
+  from: string;
+  to: string;
+  vehicle: string;
+  type: string;
+  tracking: string;
+  insurance: string;
+}
+
+interface BaseAuction {
+  id: number;
+  isActive: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+  userId: number;
+}
+
+interface AuctionWithRelations extends BaseAuction {
+  auctionData: AuctionData;
+  participants: AuctionParticipantData[];
+  user: {
+    email: string;
+    fullName: string;
+  };
+}
+
 type TransformedParticipant = {
   id: number;
   name: string;
@@ -31,88 +100,12 @@ type AuctionParticipant = {
     id: number;
     name: string;
     email: string;
-    contactName: string;
-    phone: bigint;
-    isActive: boolean;
   };
 };
 
-type AuctionWithRelations = {
-  id: number;
-  createdAt: Date;
-  updatedAt: Date;
-  isActive: boolean;
-  activeSince: Date;
-  userId: number;
-  user: {
-    email: string;
-    fullName: string;
-  };
-  auctionData: {
-    description: string;
-    freight: string;
-    from: string;
-    to: string;
-    vehicle: string;
-    type: string;
-    tracking: string;
-    insurance: string;
-  };
-  participants: Array<{
-    participant: {
-      id: number;
-      name: string;
-      email: string;
-      contactName: string;
-      phone: bigint;
-      isActive: boolean;
-    };
-  }>;
-};
 
-type AuctionQueryType = Prisma.AuctionRequestGetPayload<{
-  include: {
-    auctionData: true;
-    user: {
-      select: {
-        email: true;
-        fullName: true;
-      };
-    };
-    participants: {
-      include: {
-        participant: {
-          select: {
-            id: true;
-            name: true;
-            email: true;
-            contactName: true;
-            phone: true;
-            isActive: true;
-          };
-        };
-      };
-    };
-  };
-}>;
 
-type AuctionQueryInclude = {
-  auctionData: true;
-  participants: {
-    include: {
-      participant: {
-        select: {
-          id: true;
-          name: true;
-          email: true;
-          contactName: true;
-          phone: true;
-          isActive: true;
-        };
-      };
-    };
-  };
-};
+
 
 const auctionSchema = z.object({
   description: z.string().min(1, 'Description is required'),
@@ -126,89 +119,36 @@ const auctionSchema = z.object({
 });
 
 // GET /api/auctions/[id] - Get specific auction
+import { NextRequest } from 'next/server';
+
 export async function GET(
-  request: Request,
+  request: NextRequest,
   { params }: { params: { id: string } }
 ) {
-  try {
-    console.log('GET /api/auctions/[id] - Params:', params);
+  const auctionId = parseInt(params.id);
 
-    // Get and validate session
+  try {
     const session = await getServerSession(authOptions);
     if (!session?.user?.email) {
-      console.log('GET /api/auctions/[id] - Unauthorized');
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     // Validate auction ID
-    if (!params.id) {
-      console.log('GET /api/auctions/[id] - Missing ID');
-      return NextResponse.json({ error: 'Auction ID is required' }, { status: 400 });
-    }
-
-    const auctionId = parseInt(params.id);
     if (isNaN(auctionId)) {
-      console.log('GET /api/auctions/[id] - Invalid ID format:', params.id);
-      return NextResponse.json({ error: 'Invalid auction ID format' }, { status: 400 });
+      return NextResponse.json({ error: 'Invalid auction ID' }, { status: 400 });
     }
 
-    console.log('GET /api/auctions/[id] - Fetching auction:', params.id);
-
-    // Find the user
-    const user = await prisma.user.findUnique({
-      where: { email: session.user.email },
-      select: { id: true }
-    });
-
-    if (!user) {
-      console.log('GET /api/auctions/[id] - User not found:', session.user.email);
-      return NextResponse.json({ error: 'User not found' }, { status: 404 });
-    }
-
-    console.log('GET /api/auctions/[id] - Fetching auction:', auctionId);
-
-    // Find the auction with user validation
+    // Get auction with related data
     const auction = await prisma.auctionRequest.findFirst({
       where: {
         id: auctionId,
-        userId: user.id // Only allow access to own auctions
-      },
-      include: {
-        auctionData: true,
         user: {
-          select: {
-            email: true,
-            fullName: true
-          }
+          email: session.user.email
         },
-        participants: {
-          where: {
-            status: 'pending' // Only include active assignments
-          },
-          include: {
-            participant: {
-              where: {
-                isActive: true // Only include active participants
-              },
-              select: {
-                id: true,
-                name: true,
-                email: true,
-                contactName: true,
-                phone: true,
-                isActive: true
-              }
-            }
-          }
-        }
-      } as AuctionQueryInclude
-    }) as unknown as AuctionWithRelations;
-
-    console.log('Found auction:', {
-      id: auction?.id,
-      hasAuctionData: !!auction?.auctionData,
-      participantCount: auction?.participants?.length
-    });
+        isActive: true
+      },
+      include: AuctionInclude
+    }) as AuctionWithRelations | null;
 
     console.log('GET /api/auctions/[id] - Found auction:', {
       id: auction?.id,
@@ -217,43 +157,48 @@ export async function GET(
     });
 
     if (!auction) {
-      return NextResponse.json({ error: 'Auction not found' }, { status: 404 });
+      console.error('GET /api/auctions/[id] - Auction not found:', { auctionId });
+      return NextResponse.json({ 
+        error: 'Auction not found',
+        details: 'The requested auction does not exist or you do not have access to it'
+      }, { status: 404 });
     }
 
     if (!auction.auctionData) {
-      return NextResponse.json({ error: 'Invalid auction data' }, { status: 500 });
+      console.error('GET /api/auctions/[id] - Missing auction data:', { auctionId });
+      return NextResponse.json({ 
+        error: 'Invalid auction data',
+        details: 'The auction exists but has no associated data'
+      }, { status: 500 });
     }
-
-    // Ensure participants array exists
-    const participants = auction.participants || [];
 
     // Transform the data to match the expected format
     const transformedAuction: TransformedAuction = {
       id: auction.id,
-      ...auction.auctionData,
-      participants: participants
-        .filter(ap => ap.participant) // Filter out any invalid assignments
-        .map(ap => {
-          const participant = ap.participant;
-          if (!participant) {
+      description: auction.auctionData.description,
+      freight: auction.auctionData.freight,
+      from: auction.auctionData.from,
+      to: auction.auctionData.to,
+      vehicle: auction.auctionData.vehicle,
+      type: auction.auctionData.type,
+      tracking: auction.auctionData.tracking,
+      insurance: auction.auctionData.insurance,
+      participants: auction.participants
+        .map((ap: AuctionParticipantData) => {
+          if (!ap.participant?.participant) {
             console.error('Missing participant data for auction participant:', ap);
             return null;
           }
           return {
-            id: participant.id,
-            name: participant.name,
-            email: participant.email,
-            contactName: participant.contactName,
-            phone: participant.phone.toString()
+            id: ap.participant.participant.id,
+            name: ap.participant.participant.name,
+            email: ap.participant.participant.email,
+            contactName: ap.participant.participant.contactName,
+            phone: ap.participant.participant.phone.toString()
           };
         })
-        .filter((p): p is TransformedParticipant => p !== null)
+        .filter((p: TransformedParticipant | null): p is TransformedParticipant => p !== null)
     };
-
-    console.log('Transformed auction:', {
-      id: transformedAuction.id,
-      participantCount: transformedAuction.participants.length
-    });
 
     console.log('GET /api/auctions/[id] - Returning transformed auction:', {
       id: transformedAuction.id,
@@ -262,9 +207,30 @@ export async function GET(
     
     return NextResponse.json(transformedAuction);
   } catch (error) {
-    console.error('Error fetching auction:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    const errorStack = error instanceof Error ? error.stack : undefined;
+
+    console.error('GET /api/auctions/[id] - Error:', {
+      error: errorMessage,
+      stack: errorStack,
+      auctionId
+    });
+
+    if (error instanceof Error) {
+      return NextResponse.json(
+        { 
+          error: 'Failed to fetch auction',
+          details: error.message
+        },
+        { status: 500 }
+      );
+    }
+
     return NextResponse.json(
-      { error: 'Failed to fetch auction' },
+      { 
+        error: 'Failed to fetch auction',
+        details: 'An unexpected error occurred'
+      },
       { status: 500 }
     );
   }
@@ -273,7 +239,7 @@ export async function GET(
 // PUT /api/auctions/[id] - Update auction
 export async function PUT(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -284,8 +250,9 @@ export async function PUT(
     const json = await request.json();
     const validatedData = auctionSchema.parse(json);
 
+    const { id } = await params;
     const auction = await prisma.auctionRequest.findUnique({
-      where: { id: parseInt(params.id) },
+      where: { id: parseInt(id) },
       include: { auctionData: true }
     });
 
@@ -294,7 +261,7 @@ export async function PUT(
     }
 
     const updatedAuction = await prisma.auctionRequest.update({
-      where: { id: parseInt(params.id) },
+      where: { id: parseInt(id) },
       data: {
         auctionData: {
           update: {
@@ -327,7 +294,7 @@ export async function PUT(
 // DELETE /api/auctions/[id] - Soft delete auction
 export async function DELETE(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -335,8 +302,9 @@ export async function DELETE(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    const { id } = await params;
     const auction = await prisma.auctionRequest.findUnique({
-      where: { id: parseInt(params.id) }
+      where: { id: parseInt(id) }
     });
 
     if (!auction) {
@@ -344,7 +312,7 @@ export async function DELETE(
     }
 
     const updatedAuction = await prisma.auctionRequest.update({
-      where: { id: parseInt(params.id) },
+      where: { id: parseInt(id) },
       data: {
         isActive: false,
         updatedAt: new Date()

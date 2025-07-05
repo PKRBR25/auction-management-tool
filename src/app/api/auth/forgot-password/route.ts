@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
+import prisma from '@/lib/prisma';
 import { generateVerificationCode } from '@/lib/email/service';
 import { getPasswordResetEmailTemplate } from '@/lib/email/templates/password-reset';
 import { sendEmail } from '@/lib/email/service';
@@ -65,7 +65,7 @@ export async function POST(req: Request) {
     // Send password reset email
     console.log('Generating email template...');
     const templateParams = {
-      userFullName: user.name || email.split('@')[0],
+      userFullName: user.fullName || email.split('@')[0],
       verificationCode: resetCode.toString(),
       companyName: process.env.COMPANY_NAME || 'Our Company',
       companyAddressLine1: process.env.COMPANY_ADDRESS_LINE1 || '123 Main St',

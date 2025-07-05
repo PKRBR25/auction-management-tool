@@ -14,88 +14,91 @@ datasource db {
 }
 
 model User {
-  id              Int           @id @default(autoincrement())
-  email           String        @unique
-  hashedPassword  String
-  fullName        String?
-  createdAt       DateTime      @default(now()) @map("created_at")
-  updatedAt       DateTime      @updatedAt @map("updated_at")
-  isActive        Boolean       @default(true) @map("is_active")
-  activeSince     DateTime      @default(now()) @map("active_since")
-  verificationToken String?     @unique @map("verification_token")
-  verificationTokenExpires DateTime? @map("verification_token_expires")
-  isVerified      Boolean       @default(false) @map("is_verified")
-  verifiedSince   DateTime?     @map("verified_since")
-  passwordResets  PasswordReset[]
-  auctionRequests AuctionRequest[]
+  id                       Int              @id @default(autoincrement())
+  email                    String           @unique
+  hashedPassword           String
+  fullName                 String?
+  createdAt                DateTime         @default(now()) @map("created_at")
+  updatedAt                DateTime         @updatedAt @map("updated_at")
+  isActive                 Boolean          @default(true) @map("is_active")
+  activeSince              DateTime         @default(now()) @map("active_since")
+  verificationToken        String?          @unique @map("verification_token")
+  verificationTokenExpires DateTime?        @map("verification_token_expires")
+  isVerified               Boolean          @default(false) @map("is_verified")
+  verifiedSince            DateTime?        @map("verified_since")
+  passwordResets           PasswordReset[]
+  auctionRequests          AuctionRequest[]
 
   @@map("users")
 }
 
 model PasswordReset {
-  id                Int      @id @default(autoincrement()) @map("pr_id")
-  user              User     @relation(fields: [userId], references: [id])
-  userId            Int      @map("users_id")
-  token             Int      @unique @map("pr_token")
-  tokenExpiresAt    DateTime @map("pr_token_expires_at")
-  tokenLockedUntil  DateTime? @map("pr_token_locked_until")
-  tokenValidUntil   DateTime? @map("pr_token_valid_until")
+  id               Int       @id @default(autoincrement()) @map("pr_id")
+  user             User      @relation(fields: [userId], references: [id])
+  userId           Int       @map("users_id")
+  token            Int       @unique @map("pr_token")
+  tokenExpiresAt   DateTime  @map("pr_token_expires_at")
+  tokenLockedUntil DateTime? @map("pr_token_locked_until")
+  tokenValidUntil  DateTime? @map("pr_token_valid_until")
 
   @@map("password_reset")
 }
 
 model AuctionRequest {
-  id          Int      @id @default(autoincrement()) @map("auction_id")
-  user        User     @relation(fields: [userId], references: [id])
-  userId      Int      @map("users_id")
-  createdAt   DateTime @default(now()) @map("created_at")
-  updatedAt   DateTime @updatedAt @map("updated_at")
-  isActive    Boolean  @default(true) @map("is_active")
-  activeSince DateTime @default(now()) @map("active_since")
-  auctionData AuctionData?
+  id           Int                  @id @default(autoincrement()) @map("auction_id")
+  user         User                 @relation(fields: [userId], references: [id])
+  userId       Int                  @map("users_id")
+  createdAt    DateTime             @default(now()) @map("created_at")
+  updatedAt    DateTime             @updatedAt @map("updated_at")
+  isActive     Boolean              @default(true) @map("is_active")
+  activeSince  DateTime             @default(now()) @map("active_since")
+  status       String               @default("pending")
+  auctionData  AuctionData?
+  participants AuctionParticipants[]
 
   @@map("auction_request")
 }
 
 model AuctionData {
-  id                Int      @id @default(autoincrement()) @map("auction_id")
-  auctionRequest    AuctionRequest @relation(fields: [auctionRequestId], references: [id])
-  auctionRequestId  Int      @unique
-  description       String   @map("auction_description")
-  freight           String
-  from              String
-  to                String
-  vehicle           Vehicle
-  type              VehicleType @map("type")
-  tracking          TrackingType
-  insurance         InsuranceType
+  id               Int            @id @default(autoincrement()) @map("auction_id")
+  auctionRequest   AuctionRequest @relation(fields: [auctionRequestId], references: [id])
+  auctionRequestId Int            @unique
+  description      String         @map("auction_description")
+  freight          String
+  from             String
+  to               String
+  vehicle          Vehicle
+  type             VehicleType    @map("type")
+  tracking         TrackingType
+  insurance        InsuranceType
 
   @@map("auction_data")
 }
 
 model Participant {
-  id              Int       @id @default(autoincrement()) @map("participant_id")
-  name            String    @map("participant_name")
-  email           String    @unique
-  contactName     String    @map("contact_name")
-  phone           BigInt
-  createdAt       DateTime  @default(now()) @map("created_at")
-  updatedAt       DateTime  @updatedAt @map("updated_at")
-  isActive        Boolean   @default(true) @map("is_active")
-  activeSince     DateTime  @default(now()) @map("active_since")
+  id                  Int                  @id @default(autoincrement()) @map("participant_id")
+  name                String               @map("participant_name")
+  email               String               @unique
+  contactName         String               @map("contact_name")
+  phone               BigInt
+  createdAt           DateTime             @default(now()) @map("created_at")
+  updatedAt           DateTime             @updatedAt @map("updated_at")
+  isActive            Boolean              @default(true) @map("is_active")
+  activeSince         DateTime             @default(now()) @map("active_since")
   participantRequests ParticipantRequest[]
 
   @@map("participants")
 }
 
 model ParticipantRequest {
-  id              Int         @id @default(autoincrement()) @map("participant_id")
-  participant     Participant @relation(fields: [participantId], references: [id])
-  participantId   Int
-  createdAt       DateTime    @default(now()) @map("created_at")
-  updatedAt       DateTime    @updatedAt @map("updated_at")
-  isActive        Boolean     @default(true) @map("is_active")
-  activeSince     DateTime    @default(now()) @map("active_since")
+  id            Int                  @id @default(autoincrement()) @map("participant_id")
+  participant   Participant          @relation(fields: [participantId], references: [id])
+  participantId Int
+  createdAt     DateTime             @default(now()) @map("created_at")
+  updatedAt     DateTime             @updatedAt @map("updated_at")
+  isActive      Boolean              @default(true) @map("is_active")
+  activeSince   DateTime             @default(now()) @map("active_since")
+  auctions      AuctionParticipants[]
 
   @@map("participants_request")
 }
@@ -120,4 +123,17 @@ enum TrackingType {
 enum InsuranceType {
   YES
   NO
+}
+
+model AuctionParticipants {
+  id              Int         @id @default(autoincrement()) @map("auction_participant_id")
+  auction         AuctionRequest @relation(fields: [auctionId], references: [id])
+  auctionId       Int         @map("auction_id")
+  participant     ParticipantRequest @relation(fields: [participantId], references: [id])
+  participantId   Int         @map("participant_id")
+  status          String      @default("pending")
+  createdAt       DateTime    @default(now()) @map("created_at")
+  updatedAt       DateTime    @updatedAt @map("updated_at")
+
+  @@map("auction_participants")
 }

@@ -31,10 +31,13 @@ export default function LoginPage() {
       setIsLoading(true);
       setError(null);
 
+      // Ensure consistent handling of special characters
+      const sanitizedPassword = encodeURIComponent(data.password);
+      
       const result = await signIn('credentials', {
         redirect: false,
         email: data.email,
-        password: data.password,
+        password: sanitizedPassword,
       });
 
       if (result?.error) {

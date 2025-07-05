@@ -2,8 +2,8 @@ interface EmailTemplateParams {
   userFullName: string;
   verificationCode: string;
   companyName: string;
-  companyAddressLine1: string;
-  companyAddressLine2: string;
+  companyAddressLine1?: string;
+  companyAddressLine2?: string;
   currentYear: string;
   privacyPolicyUrl: string;
   termsUrl: string;

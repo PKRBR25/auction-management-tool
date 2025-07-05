@@ -1,7 +1,7 @@
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
-import { prisma } from "./prisma";
+import prisma from "./prisma";
 import { compare } from "bcryptjs";
 
 export const authOptions: NextAuthOptions = {
@@ -37,10 +37,17 @@ export const authOptions: NextAuthOptions = {
           throw new Error("Invalid credentials");
         }
 
+        // Decode password before comparison
+        const decodedPassword = decodeURIComponent(credentials.password);
+        
         const isPasswordValid = await compare(
-          credentials.password,
+          decodedPassword,
           user.hashedPassword
         );
+        
+        if (!isPasswordValid) {
+          console.error('Password validation failed for user:', credentials.email);
+        }
 
         if (!isPasswordValid) {
           throw new Error("Invalid credentials");

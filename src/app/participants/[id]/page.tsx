@@ -50,11 +50,24 @@ export default function EditParticipantPage({ params }: Props) {
   useEffect(() => {
     const fetchParticipant = async () => {
       try {
-        const response = await fetch(`/api/participants/${params.id}`);
+        setIsLoading(true);
+        const response = await fetch(`/api/participants/${params.id}`, {
+          // Prevent caching to always get fresh data
+          cache: 'no-store',
+          headers: {
+            'Cache-Control': 'no-cache',
+            'Pragma': 'no-cache'
+          }
+        });
+
         if (!response.ok) {
           throw new Error('Failed to fetch participant');
         }
+
         const data = await response.json();
+        console.log('Fetched participant data:', data); // Debug log
+
+        // Reset form with fetched data
         reset({
           name: data.name,
           email: data.email,
@@ -63,6 +76,7 @@ export default function EditParticipantPage({ params }: Props) {
           isActive: data.isActive,
         });
       } catch (error) {
+        console.error('Error fetching participant:', error); // Debug log
         toast({
           title: 'Error',
           description: 'Failed to load participant data',
@@ -73,7 +87,18 @@ export default function EditParticipantPage({ params }: Props) {
       }
     };
 
-    fetchParticipant();
+    // Safe check for params.id and ensure it's a valid value
+    const participantId = params?.id;
+    if (participantId && !isNaN(Number(participantId))) {
+      fetchParticipant();
+    } else {
+      setIsLoading(false);
+      toast({
+        title: 'Error',
+        description: 'Invalid participant ID',
+        variant: 'destructive',
+      });
+    }
   }, [params.id, reset]);
 
   const onSubmit = async (data: ParticipantFormData): Promise<void> => {

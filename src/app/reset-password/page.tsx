@@ -40,13 +40,16 @@ export default function ResetPasswordPage() {
       setIsLoading(true);
       setError(null);
 
+      // Ensure consistent handling of special characters in password
+      const sanitizedPassword = encodeURIComponent(data.newPassword);
+
       const response = await fetch('/api/auth/reset-password', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           email: data.email,
           verificationCode: data.verificationCode,
-          newPassword: data.newPassword,
+          newPassword: sanitizedPassword,
         }),
       });
 

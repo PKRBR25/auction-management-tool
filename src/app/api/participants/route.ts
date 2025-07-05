@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
-import { prisma } from '@/lib/prisma';
+import prisma from '@/lib/prisma';
 import { z } from 'zod';
 
 // Validation schema for participant data
@@ -25,16 +25,24 @@ export async function GET() {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Get all active participants
+    // Get all active participants directly from Participant table
     const participants = await prisma.participant.findMany({
       where: { isActive: true },
       orderBy: { name: 'asc' },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        contactName: true,
+        phone: true,
+        isActive: true,
+      }
     });
 
-    // Convert BigInt to string for JSON serialization
-    const serializedParticipants = participants.map(participant => ({
-      ...participant,
-      phone: participant.phone.toString()
+    // Convert BigInt to string for phone numbers
+    const serializedParticipants = participants.map((p) => ({
+      ...p,
+      phone: p.phone.toString()
     }));
     return NextResponse.json(serializedParticipants);
   } catch (error) {
